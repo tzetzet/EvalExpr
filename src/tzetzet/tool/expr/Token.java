@@ -60,12 +60,16 @@ public abstract class Token {
      * トークンが符号付き整数値の場合、 int 値を返す.
      *
      * トークンが符号付き整数値でない場合など、int 値として構文解析できない場合は
-     * 例外を送出する.
+     * NumberFormatException 例外を送出する.
      *
      * @return 符号付き整数値
      */
     public int parseAsNum() {
-        return Integer.parseInt(mTokenStr);
+        int n = Integer.parseInt(mTokenStr);
+        if (n < -99999999 || 99999999 < n) {
+            throw new NumberFormatException("n: " + n);
+        }
+        return n;
     }
 
     protected final String mTokenStr;

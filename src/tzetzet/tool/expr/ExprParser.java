@@ -24,7 +24,7 @@ public final class ExprParser {
     public static List<Token> parse(String exprStr) throws ExprParserException {
         List<Token> tokens = scan(exprStr);
         if (tokens == null || tokens.isEmpty()) {
-            throw new ExprParserException("Input EXPR is empty");
+            throw new ExprParserException("syntax error: no EXPR found");
         }
 
         return makeRPN(tokens);
@@ -46,7 +46,7 @@ public final class ExprParser {
         int nextStart = 0;
         while (matcher.find(nextStart)) {
             if (nextStart != matcher.start()) {
-                throw new ExprParserException("syntax error: " + exprStr);
+                throw new ExprParserException("syntax error at: " + exprStr.substring(nextStart));
             }
             nextStart = matcher.end();
 
@@ -75,7 +75,20 @@ public final class ExprParser {
                 }
                 tokens.add(token);
                 isMinusUnaryFound = false;
+
+                // 符号付き整数トークンの場合は、値を範囲チェック
+                if (token instanceof Token.NumToken) {
+                    try {
+                        token.parseAsNum();
+                    } catch (NumberFormatException ex) {
+                        throw new ExprParserException("number range error: number " + token.toString() + " is out of [-99999999 <= n <= 99999999]");
+                    }
+                }
             }
+        }
+
+        if (nextStart < exprStr.length()) {
+            throw new ExprParserException("syntax error: incorrect EXPR found at: " + exprStr.substring(nextStart));
         }
 
         return tokens;
