@@ -17,10 +17,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-/**
- *
- * @author sue
- */
 public class ExprEvalTest {
 
     public ExprEvalTest() {

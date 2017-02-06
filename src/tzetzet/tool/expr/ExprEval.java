@@ -22,19 +22,29 @@ public final class ExprEval {
         ArrayDeque<Integer> numStack = new ArrayDeque<>();
         for (Token token : rpnTokens) {
             if (token instanceof Token.BinOpeToken) {
+                if (numStack.size() < 1) {
+                    throw new ExprEvalException("syntax error: two operands lack for operator " + token.toString());
+                } else if (numStack.size() < 2) {
+                    throw new ExprEvalException("syntax error: one operand lacks for operator " + token.toString());
+                }
                 int r = numStack.pop();
                 int l = numStack.pop();
+                long n;
                 if (token == Token.PLUS) {
-                    numStack.push(l + r);
+                    n = l + r;
                 } else if (token == Token.MINUS) {
-                    numStack.push(l - r);
+                    n = l - r;
                 } else if (token == Token.TIMES) {
-                    numStack.push(l * r);
+                    n = l * r;
                 } else if (token == Token.DIVIDE) {
-                    numStack.push(l / r);
+                    n = l / r;
                 } else {
-                    assert false;
+                    throw new RuntimeException("Unknown Error");
                 }
+                if (isOutOfNumRange(n)) {
+                    throw new ExprEvalException("number overflow");
+                }
+                numStack.push((int) n);
             } else {
                 numStack.push(token.parseAsNum());
             }
@@ -45,6 +55,10 @@ public final class ExprEval {
         }
 
         return numStack.pop();
+    }
+
+    private static boolean isOutOfNumRange(long n) {
+        return (n < -99999999 || 99999999 < n);
     }
 
     private ExprEval() {

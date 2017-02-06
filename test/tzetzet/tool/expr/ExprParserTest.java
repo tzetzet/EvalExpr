@@ -10,8 +10,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -19,10 +17,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-/**
- *
- * @author sue
- */
 public class ExprParserTest {
 
     public ExprParserTest() {
@@ -197,6 +191,7 @@ public class ExprParserTest {
             "1 + (2 * 3 - 4)",
             "1 + (2 * (3 - 4))",
             "1 + 2 * (3 - 4)",
+            "1 + (2) * 3 - 4",
         };
         String[] expResults = {
             "1 2 3 * + 4 -",
@@ -207,6 +202,7 @@ public class ExprParserTest {
             "1 2 3 * 4 - +",
             "1 2 3 4 - * +",
             "1 2 3 4 - * +",
+            "1 2 3 * + 4 -",
         };
 
         for (int i = 0; i < exprStrs.length; i++) {
