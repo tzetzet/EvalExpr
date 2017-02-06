@@ -7,10 +7,19 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * 数式を構文解析する機能を提供する.
+ *
+ * 構文解析の結果は逆ポーランド記法のトークン列とする.
  */
-public class ExprParser {
+public final class ExprParser {
     private static final Pattern TOKEN_PATTERN = Pattern.compile("\\s+|\\(|\\)|[0-9]+|-|\\+|\\*|/");
 
+    /**
+     * 与えられた数式を字句解析し、トークン列として返却する.
+     *
+     * @param exprStr 数式を記述した文字列
+     * @return 数式を字句解析したトークン列
+     */
     public static List<Token> scan(String exprStr) {
         ArrayList<Token> tokens = new ArrayList<>();
 
@@ -20,7 +29,7 @@ public class ExprParser {
 
         Matcher matcher = TOKEN_PATTERN.matcher(exprStr);
 
-        boolean rememberMinusUnary = false;
+        boolean isMinusUnaryFound = false;
         int nextStart = 0;
         while (matcher.find(nextStart)) {
             if (nextStart != matcher.start()) {
@@ -34,27 +43,38 @@ public class ExprParser {
                 continue;
             }
 
+            /*
+             * パターンマッチにより取り出したトークン文字列からトークンオブジェクト
+             * を得る. その際、マイナス記号が二項演算子ではなく単項演算子の場合は、
+             * 後続の符号付き整数トークンの一部として扱う.
+             */
             Token token = Token.getToken(tokenStr);
-            if (token == Token.MINUS && (tokens.size() == 0 || tokens.get(tokens.size() - 1) instanceof Token.CtrlToken)) {
-                if (rememberMinusUnary) {
+            if (token == Token.MINUS && (tokens.isEmpty() || tokens.get(tokens.size() - 1) instanceof Token.CtrlToken)) {
+                if (isMinusUnaryFound) {
                     throw new RuntimeException();
                 }
-                rememberMinusUnary = true;
+                isMinusUnaryFound = true;
             } else {
-                if (rememberMinusUnary) {
+                if (isMinusUnaryFound) {
                     if (!(token instanceof Token.NumToken)) {
                         throw new RuntimeException();
                     }
                     token = Token.getToken("-" + tokenStr);
                 }
                 tokens.add(token);
-                rememberMinusUnary = false;
+                isMinusUnaryFound = false;
             }
         }
 
         return tokens;
     }
 
+    /**
+     * 数式を分割したトークン列を、逆ポーランド記法の列に変換する.
+     *
+     * @param exprTokens 分割済みトークン列
+     * @return 逆ポーランド記法での列
+     */
     public static List<Token> makeRPN(List<Token> exprTokens) {
         ArrayDeque<Token> ctrlStack = new ArrayDeque<>();
         ArrayList<Token> rpnTokens = new ArrayList<>();

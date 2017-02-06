@@ -4,8 +4,15 @@ import java.util.ArrayDeque;
 import java.util.List;
 
 /**
+ * 数式を評価する.
  */
-public class ExprEval {
+public final class ExprEval {
+    /**
+     * 逆ポーランド記法のトークン列に変換した数式を評価して値を返す.
+     *
+     * @param rpnTokens 逆ポーランド記法のトークン列
+     * @return 評価した整数値
+     */
     public static int evalRPN(List<Token> rpnTokens) {
         ArrayDeque<Integer> numStack = new ArrayDeque<>();
         for (Token token : rpnTokens) {
@@ -27,7 +34,10 @@ public class ExprEval {
                 numStack.push(token.parseAsNum());
             }
         }
-        assert numStack.size() == 1;
+
+        if (numStack.size() != 1) {
+            throw new RuntimeException();
+        }
 
         return numStack.pop();
     }
