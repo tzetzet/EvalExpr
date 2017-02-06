@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -14,6 +15,9 @@ public class Main {
     private static final boolean DEBUG = false;
 
     public static void main(String[] args) throws IOException {
+        // 日本語ロケールだと文字化けしやすいためデフォルトロケールを英語に設定
+        Locale.setDefault(Locale.ENGLISH);
+
         // 標準入力から１行ずつ読み込み、行単位で数式として評価する
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         String line;

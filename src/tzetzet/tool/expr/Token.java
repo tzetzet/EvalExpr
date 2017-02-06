@@ -18,6 +18,10 @@ public abstract class Token {
         PLUS, MINUS, TIMES, DIVIDE, OPEN_PAREN, CLOSE_PAREN,
     };
 
+    static boolean isOutOfNumRange(long n) {
+        return (n < -99999999 || 99999999 < n);
+    }
+
     /**
      * トークン文字列からトークンオブジェクトを得る.
      *
@@ -66,7 +70,7 @@ public abstract class Token {
      */
     public int parseAsNum() {
         int n = Integer.parseInt(mTokenStr);
-        if (n < -99999999 || 99999999 < n) {
+        if (isOutOfNumRange(n)) {
             throw new NumberFormatException("n: " + n);
         }
         return n;

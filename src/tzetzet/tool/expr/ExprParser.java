@@ -3,6 +3,7 @@ package tzetzet.tool.expr;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,7 +25,8 @@ public final class ExprParser {
     public static List<Token> parse(String exprStr) throws ExprParserException {
         List<Token> tokens = scan(exprStr);
         if (tokens == null || tokens.isEmpty()) {
-            throw new ExprParserException("syntax error: no EXPR found");
+            ResourceBundle rb = ResourceBundle.getBundle(ExprParser.class.getPackage().getName() + ".messages");
+            throw new ExprParserException(rb.getString("syntaxerr_noexpr"));
         }
 
         return makeRPN(tokens);
@@ -40,13 +42,15 @@ public final class ExprParser {
             return tokens;
         }
 
+        ResourceBundle rb = ResourceBundle.getBundle(ExprParser.class.getPackage().getName() + ".messages");
+
         Matcher matcher = TOKEN_PATTERN.matcher(exprStr);
 
         boolean isMinusUnaryFound = false;
         int nextStart = 0;
         while (matcher.find(nextStart)) {
             if (nextStart != matcher.start()) {
-                throw new ExprParserException("syntax error at: " + exprStr.substring(nextStart));
+                throw new ExprParserException(String.format(rb.getString("syntaxerr_at"), exprStr.substring(nextStart)));
             }
             nextStart = matcher.end();
 
@@ -63,13 +67,13 @@ public final class ExprParser {
             Token token = Token.getToken(tokenStr);
             if (token == Token.MINUS && (tokens.isEmpty() || tokens.get(tokens.size() - 1) instanceof Token.BinOpeToken)) {
                 if (isMinusUnaryFound) {
-                    throw new ExprParserException("syntax error: double minus unary operators are not allowed.");
+                    throw new ExprParserException(rb.getString("syntaxerr_doubleminus"));
                 }
                 isMinusUnaryFound = true;
             } else {
                 if (isMinusUnaryFound) {
                     if (!(token instanceof Token.NumToken)) {
-                        throw new ExprParserException("syntax error: minus unary operators are allowd only to numeric literal.");
+                        throw new ExprParserException(rb.getString("syntaxerr_wrong_unary"));
                     }
                     token = Token.getToken("-" + tokenStr);
                 }
@@ -81,14 +85,14 @@ public final class ExprParser {
                     try {
                         token.parseAsNum();
                     } catch (NumberFormatException ex) {
-                        throw new ExprParserException("number range error: number " + token.toString() + " is out of [-99999999 <= n <= 99999999]");
+                        throw new ExprParserException(String.format(rb.getString("inputnumerr_intrange"), token.toString()));
                     }
                 }
             }
         }
 
         if (nextStart < exprStr.length()) {
-            throw new ExprParserException("syntax error: incorrect EXPR found at: " + exprStr.substring(nextStart));
+            throw new ExprParserException(String.format(rb.getString("syntaxerr_at"), exprStr.substring(nextStart)));
         }
 
         return tokens;
@@ -97,7 +101,7 @@ public final class ExprParser {
     /*
      * 数式を分割したトークン列を、逆ポーランド記法の列に変換する.
      */
-    static List<Token> makeRPN(List<Token> exprTokens) {
+    static List<Token> makeRPN(List<Token> exprTokens) throws ExprParserException {
         ArrayDeque<Token> ctrlStack = new ArrayDeque<>();
         ArrayList<Token> rpnTokens = new ArrayList<>();
 
@@ -105,11 +109,14 @@ public final class ExprParser {
             return rpnTokens;
         }
 
+        ResourceBundle rb = ResourceBundle.getBundle(ExprParser.class.getPackage().getName() + ".messages");
+
         /*
          * 逆ポーランド記法に変換する.
          * 演算子を ctrlStack に積んで一時記憶することにより、演算の優先順位に
          * 応じた並びにする実装.
          */
+        int nestDepth = 0;
         for (Token nextToken : exprTokens) {
             if (nextToken instanceof Token.BinOpeToken) {
                 /*
@@ -130,25 +137,38 @@ public final class ExprParser {
                 ctrlStack.push(nextToken);
             } else if (nextToken == Token.OPEN_PAREN) {
                 ctrlStack.push(nextToken);
+                nestDepth++;
             } else if (nextToken == Token.CLOSE_PAREN) {
                 /*
                  * 丸括弧が終端した場合、ctrlStack に一時記憶しておいた演算を
                  * 掃き出してしまう.
                  */
+                boolean done = false;
                 while (ctrlStack.size() > 0) {
                     Token ctrlToken = ctrlStack.pop();
                     if (ctrlToken == Token.OPEN_PAREN) {
+                        done = true;
                         break;
                     } else {
                         rpnTokens.add(ctrlToken);
                     }
                 }
+                if (!done) {
+                    throw new ExprParserException(String.format(rb.getString("syntaxerr_noparenpair"), nextToken.toString()));
+                }
+                nestDepth--;
             } else {
                 rpnTokens.add(nextToken);
             }
         }
         while (ctrlStack.size() > 0) {
             rpnTokens.add(ctrlStack.pop());
+        }
+
+        if (nestDepth > 0) {
+            throw new ExprParserException(String.format(rb.getString("syntaxerr_noparenpair"), "("));
+        } else if (nestDepth < 0) {
+            throw new ExprParserException(String.format(rb.getString("syntaxerr_noparenpair"), ")"));
         }
 
         return rpnTokens;

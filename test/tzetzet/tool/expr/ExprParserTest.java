@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringJoiner;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -79,7 +80,7 @@ public class ExprParserTest {
      */
 
     @Test
-    public void testMakeRPN_NULL入力() {
+    public void testMakeRPN_NULL入力() throws ExprParserException {
         List<Token> exprTokens = null;
         List<Token> result = ExprParser.makeRPN(exprTokens);
         assertNotNull(result);
@@ -87,7 +88,7 @@ public class ExprParserTest {
     }
 
     @Test
-    public void testMakeRPN_空リスト入力() {
+    public void testMakeRPN_空リスト入力() throws ExprParserException {
         List<Token> exprTokens = Collections.EMPTY_LIST;
         List<Token> result = ExprParser.makeRPN(exprTokens);
         assertNotNull(result);
@@ -95,7 +96,7 @@ public class ExprParserTest {
     }
 
     @Test
-    public void testMakeRPN_正常系1() {
+    public void testMakeRPN_正常系1() throws ExprParserException {
         String expr = "90 + ( ( 80 - 70 ) * 60 ) / 50 + -40 - 30 * 20 / 10";
         List<Token> exprTokens = new ArrayList<>();
         for (String tokenStr : expr.split("\\s")) {
@@ -114,7 +115,8 @@ public class ExprParserTest {
 
     @Test
     public void testParse_NULL入力() {
-        String expResult = "tzetzet.tool.expr.ExprParserException: Input EXPR is empty";
+        Locale.setDefault(Locale.ENGLISH);
+        String expResult = "tzetzet.tool.expr.ExprParserException: syntax error: no expression input found.";
 
         String exprStr = null;
         String result = null;
@@ -130,7 +132,8 @@ public class ExprParserTest {
 
     @Test
     public void testParse_空文字列入力() {
-        String expResult = "tzetzet.tool.expr.ExprParserException: Input EXPR is empty";
+        Locale.setDefault(Locale.JAPANESE);
+        String expResult = "tzetzet.tool.expr.ExprParserException: 文法エラー: 数式が見つかりません.";
 
         String exprStr = "";
         String result = null;

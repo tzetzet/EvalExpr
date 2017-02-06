@@ -2,6 +2,8 @@ package tzetzet.tool.expr;
 
 import java.util.ArrayDeque;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 /**
  * 数式を評価するスタティックメソッドを提供する.
@@ -19,13 +21,15 @@ public final class ExprEval {
             throw new IllegalArgumentException("rpnTokens: " + rpnTokens);
         }
 
+        ResourceBundle rb = ResourceBundle.getBundle(ExprEval.class.getPackage().getName() + ".messages");
+
         ArrayDeque<Integer> numStack = new ArrayDeque<>();
         for (Token token : rpnTokens) {
             if (token instanceof Token.BinOpeToken) {
                 if (numStack.size() < 1) {
-                    throw new ExprEvalException("syntax error: two operands lack for operator " + token.toString());
+                    throw new ExprEvalException(String.format(rb.getString("syntaxerr_lack_2_operands"), token.toString()));
                 } else if (numStack.size() < 2) {
-                    throw new ExprEvalException("syntax error: one operand lacks for operator " + token.toString());
+                    throw new ExprEvalException(String.format(rb.getString("syntaxerr_lack_1_operand"), token.toString()));
                 }
                 int r = numStack.pop();
                 int l = numStack.pop();
@@ -41,24 +45,24 @@ public final class ExprEval {
                 } else {
                     throw new RuntimeException("Unknown Error");
                 }
-                if (isOutOfNumRange(n)) {
-                    throw new ExprEvalException("number overflow");
+                if (Token.isOutOfNumRange(n)) {
+                    throw new ExprEvalException(rb.getString("runtimeerr_calc_interim"));
                 }
                 numStack.push((int) n);
             } else {
-                numStack.push(token.parseAsNum());
+                if (token instanceof Token.NumToken) {
+                    numStack.push(token.parseAsNum());
+                } else {
+                    throw new ExprEvalException(String.format(rb.getString("syntaxerr_at"), token.toString()));
+                }
             }
         }
 
         if (numStack.size() != 1) {
-            throw new ExprEvalException("extra inputs");
+            throw new ExprEvalException(String.format(rb.getString("syntaxerr_extra"), numStack.peek().toString()));
         }
 
         return numStack.pop();
-    }
-
-    private static boolean isOutOfNumRange(long n) {
-        return (n < -99999999 || 99999999 < n);
     }
 
     private ExprEval() {
