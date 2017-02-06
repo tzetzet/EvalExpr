@@ -4,7 +4,7 @@ import java.util.ArrayDeque;
 import java.util.List;
 
 /**
- * 数式を評価する.
+ * 数式を評価するスタティックメソッドを提供する.
  */
 public final class ExprEval {
     /**
@@ -12,8 +12,13 @@ public final class ExprEval {
      *
      * @param rpnTokens 逆ポーランド記法のトークン列
      * @return 評価した整数値
+     * @throws ExprEvalException
      */
-    public static int evalRPN(List<Token> rpnTokens) {
+    public static int evalRPN(List<Token> rpnTokens) throws ExprEvalException {
+        if (rpnTokens == null || rpnTokens.isEmpty()) {
+            throw new IllegalArgumentException("rpnTokens: " + rpnTokens);
+        }
+
         ArrayDeque<Integer> numStack = new ArrayDeque<>();
         for (Token token : rpnTokens) {
             if (token instanceof Token.BinOpeToken) {
@@ -36,9 +41,12 @@ public final class ExprEval {
         }
 
         if (numStack.size() != 1) {
-            throw new RuntimeException();
+            throw new ExprEvalException("extra inputs");
         }
 
         return numStack.pop();
+    }
+
+    private ExprEval() {
     }
 }
